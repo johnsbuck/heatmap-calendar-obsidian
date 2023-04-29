@@ -37,7 +37,6 @@
 
 .heatmap-calendar-boxes {
   grid-auto-flow: column;
-  grid-template-columns: repeat(53, minmax(0, 1fr));
   grid-area: boxes;
 }
 

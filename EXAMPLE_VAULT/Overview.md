@@ -144,6 +144,8 @@ const hue1 = 13 //red
 const hue2 = 132 //green
 
 const calendarData = { 
+    year: 2023,
+    month: 4,
     intensityScaleStart: 1,
     intensityScaleEnd: 9,
     colors: {
