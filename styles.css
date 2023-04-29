@@ -19,7 +19,7 @@
   width: 100%;
 }
 
-.heatmap-calendar-months {
+.heatmap-calendar-column-header {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   grid-area: months;
@@ -28,20 +28,20 @@
   grid-gap: 0.3em;
 }
 
-.heatmap-calendar-days {
+.heatmap-calendar-rows {
   grid-area: days;
   margin-left: 0.1em;
   margin-right: 0.3em;
   white-space: nowrap;
 }
 
-.heatmap-calendar-boxes {
+.heatmap-calendar-columns {
   grid-auto-flow: column;
   grid-area: boxes;
 }
 
-.heatmap-calendar-days,
-.heatmap-calendar-boxes {
+.heatmap-calendar-rows,
+.heatmap-calendar-columns {
   display: grid;
   grid-gap: 0.3em;
   grid-template-rows: repeat(7, minmax(0, 1fr));
@@ -54,25 +54,25 @@
 }
 
 /* only label three days of the week */
-.heatmap-calendar-days li:nth-child(odd) {
+.heatmap-calendar-rows li:nth-child(odd) {
   visibility: hidden;
 }
 
-.heatmap-calendar-boxes li {
+.heatmap-calendar-columns li {
   position: relative;
   font-size: 0.75em;
   background-color: #ebedf0;
 }
 
-.theme-dark .heatmap-calendar-boxes .isEmpty {
+.theme-dark .heatmap-calendar-columns .isEmpty {
   background: #333;
 }
 
-.heatmap-calendar-boxes li:not(.task-list-item)::before {
+.heatmap-calendar-columns li:not(.task-list-item)::before {
   content: unset;
 }
 
-.heatmap-calendar-boxes .internal-link {
+.heatmap-calendar-columns .internal-link {
   text-decoration: none;
   position: absolute;
   width: 100%;
@@ -80,7 +80,7 @@
   text-align: center;
 }
 
-.heatmap-calendar-boxes .today {
+.heatmap-calendar-columns .today {
   border: solid 1px rgb(61, 61, 61);
 }
 

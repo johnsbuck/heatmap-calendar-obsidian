@@ -16,6 +16,8 @@ see [github repo](https://github.com/Richardsl/heatmap-calendar-obsidian#readme)
 dv.span("**🏋️ Exercise 🏋️**")
 
 const calendarData = {
+    type: "year",
+    year: 2023,
     colors: {
         red: ["#ff9e82","#ff7b55","#ff4d1a","#e73400","#bd2a00",]
     },
@@ -60,6 +62,10 @@ renderHeatmapCalendar(this.container, calendarData)
 dv.span("**🍺 Alcohol Consumption 🍺**")
 
 const calendarData = {
+    type: "month",
+    year: 2023,
+    month: 1,
+    colfmt: "ddd",
     colors: {
         blue: ["#ffdf04","#ffbe04","#ff9a03","#ff6d02","#ff2c01"]
     },
@@ -143,9 +149,11 @@ dv.span("** 😊 Mood  😥**")
 const hue1 = 13 //red
 const hue2 = 132 //green
 
-const calendarData = { 
+const calendarData = {
+    type: "year",
     year: 2023,
     month: 4,
+    colfmt: "mmm",
     intensityScaleStart: 1,
     intensityScaleEnd: 9,
     colors: {
@@ -177,6 +185,3 @@ for(let page of dv.pages('"daily notes"').where(p=>p.mood)){
 renderHeatmapCalendar(this.container, calendarData)
 
 ```
-
-
-

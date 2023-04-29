@@ -1,9 +1,18 @@
 import { Plugin, } from 'obsidian'
 import HeatmapCalendarSettingsTab from "settings"
+import { moment } from 'obsidian'
+
+enum HeatmapType {
+	Year = "year",
+	Month = "month",
+}
 
 interface CalendarData {
+	type: string
 	year: number
 	month: number
+	rowfmt: string
+	colfmt: string
 	colors: {
 		[index: string | number]: string[]
 	} | string
@@ -26,9 +35,13 @@ interface Entry {
 	color: string 
 	content: string
 }
+
 const DEFAULT_SETTINGS: CalendarData = {
+	type: "year",
 	year: new Date().getFullYear(),
-	month: 0,
+	month: new Date().getMonth(),
+	rowfmt: "",	// Set by function based on type
+	colfmt: "", // Set by function based on type
 	colors: {
 		default: ["#c6e48b", "#7bc96f", "#49af5d", "#2e8840", "#196127",],
 	},
@@ -38,6 +51,7 @@ const DEFAULT_SETTINGS: CalendarData = {
 	intensityScaleStart: 1,
 	intensityScaleEnd: 5,
 }
+
 export default class HeatmapCalendar extends Plugin {
 
 	settings: CalendarSettings
@@ -108,9 +122,28 @@ export default class HeatmapCalendar extends Plugin {
 		//@ts-ignore
 		window.renderHeatmapCalendar = (el: HTMLElement, calendarData: CalendarData): void => {
 			const year = calendarData.year ?? this.settings.year
-			let month = calendarData.month ?? 0
-			month = month < 0 || month > 12 ? 0 : month
-			
+			const month = calendarData.month ?? this.settings.month
+			const type = calendarData.type ?? this.settings.type;
+			// Set Row & Column Formats
+			const rowfmt = ((x = calendarData.rowfmt ?? this.settings.rowfmt) => {
+				if (x !== "") {
+					return x
+				}
+				if (type === "year") {
+					return "ddd"
+				}
+				return "WW"
+			})()
+			const colfmt = ((x = calendarData.colfmt ?? this.settings.colfmt) => {
+				if (x !== "") {
+					return x
+				}
+				if (type === "year") {
+					return "MMM"
+				}
+				return "ddd"
+			})()
+
 			const colors = typeof calendarData.colors === "string"
 				? this.settings.colors[calendarData.colors]
 					? { [calendarData.colors]: this.settings.colors[calendarData.colors], }
@@ -171,14 +204,12 @@ export default class HeatmapCalendar extends Plugin {
 			let startDay = 1
 			let lastDay = this.getHowManyDaysIntoYear(lastDayOfYear) //eg 365 or 366
 
-			if (month !== 0) {
+			if (type === "month") {
 				startDay = this.getHowManyDaysIntoYear(new Date(Date.UTC(year, month - 1, 1)))
 				lastDay = this.getHowManyDaysIntoYear(new Date(Date.UTC(year, month, 0)));
 			}
 
-
 			for (let day = startDay; day <= lastDay; day++) {
-
 				const box: Box = {
                     classNames: [],
                 }
@@ -211,42 +242,54 @@ export default class HeatmapCalendar extends Plugin {
 				parent: heatmapCalendarGraphDiv,
 			})
 
-			const heatmapCalendarMonthsUl = createEl("ul", {
-				cls: "heatmap-calendar-months",
+			let heatmapCalendarMonthsUl = createEl("ul", {
+				cls: "heatmap-calendar-column-header",
 				parent: heatmapCalendarGraphDiv,
 			})
 
-			// Generate months on top of heatmap using short month naming convention
-			if (month === 0) {
-				const NUM_MONTHS = 12;
-				for (let i = 0; i < NUM_MONTHS; i++) {
-					createEl("li", { text: new Date(year, i, 1).toLocaleString('default', { month: 'short' }), parent: heatmapCalendarMonthsUl, })
-				}
-			} else {
-				// We selected a singular month, only generate this month
-				createEl("li", { text: new Date(year, month, 0).toLocaleString('default', { month: 'short' }), parent: heatmapCalendarMonthsUl, })
-			}
-
-			const heatmapCalendarDaysUl = createEl("ul", {
-				cls: "heatmap-calendar-days",
+			let heatmapCalendarDaysUl = createEl("ul", {
+				cls: "heatmap-calendar-rows",
 				parent: heatmapCalendarGraphDiv,
 			})
-
-			createEl("li", { text: "Mon", parent: heatmapCalendarDaysUl, })
-			createEl("li", { text: "Tue", parent: heatmapCalendarDaysUl, })
-			createEl("li", { text: "Wed", parent: heatmapCalendarDaysUl, })
-			createEl("li", { text: "Thu", parent: heatmapCalendarDaysUl, })
-			createEl("li", { text: "Fri", parent: heatmapCalendarDaysUl, })
-			createEl("li", { text: "Sat", parent: heatmapCalendarDaysUl, })
-			createEl("li", { text: "Sun", parent: heatmapCalendarDaysUl, })
 
 			let heatmapCalendarBoxesUl = createEl("ul", {
-				cls: "heatmap-calendar-boxes",
+				cls: "heatmap-calendar-columns",
 				parent: heatmapCalendarGraphDiv,
 			})
 
 			const MAX_WEEKS = 53;
-			heatmapCalendarBoxesUl.style.setProperty('grid-template-columns', 'repeat(' + String(month === 0 ? MAX_WEEKS : this.weekCount(year, month)) + ')')
+			const MAX_WEEKDAYS = 7;
+			const MAX_MONTHS = 12;
+
+			if (type === "month") {
+				const WEEKS_IN_MONTH = this.weekCount(year, month);
+
+				heatmapCalendarMonthsUl.style.setProperty('grid-template-columns', 'repeat(7, minmax(0, 1fr))')
+				for (let i = 0; i < MAX_WEEKDAYS; i++) {
+					createEl("li", { text: moment().day(-7 + i).format(colfmt), parent: heatmapCalendarMonthsUl, })
+				}
+
+				heatmapCalendarDaysUl.style.setProperty('grid-template-rows', 'repeat(' + String(WEEKS_IN_MONTH) + ', minmax(0, 1fr))')
+				for (let i = 0; i < WEEKS_IN_MONTH; i++) {
+					createEl("li", { text: moment(new Date(year, month, 1)).add(i, 'w').format(rowfmt), parent: heatmapCalendarDaysUl, })
+				}
+
+				heatmapCalendarBoxesUl.style.setProperty('grid-template-columns', 'repeat(7,minmax(0, 1fr))')
+				heatmapCalendarBoxesUl.style.setProperty('grid-template-rows', 'repeat(' + String(WEEKS_IN_MONTH) + ', minmax(0, 1fr))')
+			} else {
+				heatmapCalendarMonthsUl.style.setProperty('grid-template-columns', 'repeat(12, minmax(0, 1fr))')
+				for (let i = 0; i < MAX_MONTHS; i++) {
+					createEl("li", { text: moment.months(i).format(colfmt), parent: heatmapCalendarMonthsUl, })
+				}
+
+				heatmapCalendarDaysUl.style.setProperty('grid-template-rows', 'repeat(7, minmax(0, 1fr))')
+				for (let i = 0; i < MAX_WEEKDAYS; i++) {
+					createEl("li", { text: moment().day(-7 + i).format(rowfmt), parent: heatmapCalendarDaysUl, })
+				}
+
+				heatmapCalendarBoxesUl.style.setProperty('grid-template-columns', 'repeat(53, minmax(0, 1fr))')
+				heatmapCalendarBoxesUl.style.setProperty('grid-template-rows', 'repeat(7, minmax(0, 1fr))')
+			}
 
 			boxes.forEach(e => {
 				const entry = createEl("li", {
@@ -264,7 +307,6 @@ export default class HeatmapCalendar extends Plugin {
 					text: e.content,
 				})
 			})
-
 		}
 	}
 
