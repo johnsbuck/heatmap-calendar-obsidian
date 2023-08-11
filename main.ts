@@ -149,7 +149,7 @@ export default class HeatmapCalendar extends Plugin {
 				mappedEntries[this.getHowManyDaysIntoYear(new Date(e.date))] = newEntry
 			})
 
-			const firstDayOfYear = new Date(Date.UTC(year, 0, 1))
+			const firstDayOfYear = new Date(Date.UTC(year, (month !== 0) ? month-1 : 0, 1))
 			let numberOfEmptyDaysBeforeYearBegins = (firstDayOfYear.getUTCDay() + 6) % 7
 
 			interface Box {
